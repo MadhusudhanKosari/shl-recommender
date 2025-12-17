@@ -6,6 +6,24 @@ STOPWORDS = {
     "that", "as", "at", "by", "from", "we", "you", "they",
     "looking", "hire", "hiring", "need", "required", "required"
 }
+SKILL_KEYWORDS = {
+    "java": "Java programming",
+    "python": "Python programming",
+    "sql": "SQL skills",
+    "sales": "sales roles",
+    "analyst": "analyst roles",
+    "manager": "managerial roles",
+    "product": "product-focused roles",
+    "marketing": "marketing roles"
+}
+
+EXPERIENCE_KEYWORDS = {
+    "year": "experience requirements",
+    "years": "experience requirements",
+    "experience": "experience requirements",
+    "senior": "senior-level roles",
+    "junior": "entry-level roles"
+}
 
 df = load_train_data()
 
@@ -35,13 +53,17 @@ def recommend_assessments(query, top_k=5):
         reasons = []
 
         # keyword overlap
-        for word in keywords:
-            if word in STOPWORDS:
-                continue
-            if word in past_query:
+        # skill-based reasoning
+        for key, label in SKILL_KEYWORDS.items():
+            if key in query_text and key in past_query:
+                score += 3
+                reasons.append(label)
+
+        # experience-based reasoning
+        for key, label in EXPERIENCE_KEYWORDS.items():
+            if key in query_text and key in past_query:
                 score += 2
-                if word not in reasons:
-                    reasons.append(word)
+                reasons.append(label)
 
         # role-specific boost
         for role in ["java", "python", "sql", "analyst", "sales", "manager"]:
@@ -54,8 +76,11 @@ def recommend_assessments(query, top_k=5):
             score += 2
             reasons.append("matches 40-minute assessment duration")
 
-        if score > 0:
-            reason_text = "Matched skills and requirements related to " + ", ".join(reasons[:3]) if reasons else "Relevant to similar SHL hiring queries"
+        if reasons:
+            reason_text = "Relevant for " + " and ".join(reasons[:2])
+        else:
+            reason_text = "Frequently recommended for similar SHL hiring scenarios"
+
 
             results.append({
                 "url": url,
