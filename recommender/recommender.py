@@ -1,5 +1,11 @@
 from recommender.load_data import load_train_data
 import re
+STOPWORDS = {
+    "i", "am", "for", "with", "and", "or", "the", "a", "an",
+    "to", "in", "on", "of", "it", "is", "are", "be", "this",
+    "that", "as", "at", "by", "from", "we", "you", "they",
+    "looking", "hire", "hiring", "need", "required", "required"
+}
 
 df = load_train_data()
 
@@ -30,6 +36,8 @@ def recommend_assessments(query, top_k=5):
 
         # keyword overlap
         for word in keywords:
+            if word in STOPWORDS:
+                continue
             if word in past_query:
                 score += 2
                 if word not in reasons:
@@ -47,7 +55,7 @@ def recommend_assessments(query, top_k=5):
             reasons.append("matches 40-minute assessment duration")
 
         if score > 0:
-            reason_text = "Matched " + ", ".join(reasons[:3]) if reasons else "Relevant to similar SHL hiring queries"
+            reason_text = "Matched skills and requirements related to " + ", ".join(reasons[:3]) if reasons else "Relevant to similar SHL hiring queries"
 
             results.append({
                 "url": url,
