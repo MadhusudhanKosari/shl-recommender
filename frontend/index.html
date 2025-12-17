@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SHL Assessment Recommendation System</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="container">
+    <h1>SHL Assessment Recommendation System</h1>
+    <p class="subtitle">
+      Enter a hiring query or job description to get relevant SHL assessments
+    </p>
+
+    <textarea id="queryInput"
+      placeholder="Example: Hiring Java developers with collaboration skills"></textarea>
+
+    <button onclick="getRecommendations()">Recommend Assessments</button>
+
+    <!-- Loading Section -->
+    <div id="loading" class="hidden">
+      <div class="spinner"></div>
+      <p>
+        Fetching recommendations…  
+        <br />
+        <span class="note">
+          (First request may take up to 1–2 minutes due to server cold start)
+        </span>
+      </p>
+    </div>
+
+    <!-- Results -->
+    <div id="results"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

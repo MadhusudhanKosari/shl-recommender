@@ -1,7 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from recommender.recommender import recommend_assessments
 
 app = Flask(__name__)
+CORS(app)  # <-- THIS LINE FIXES CORS
+
 
 @app.route("/health", methods=["GET"])
 def health():
