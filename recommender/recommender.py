@@ -19,34 +19,45 @@ def recommend_assessments(query, top_k=5):
     keywords = extract_keywords(query)
     query_text = query.lower()
 
-    scores = {}
+    results = []
 
     for _, row in df.iterrows():
         past_query = row["Query"].lower()
         url = row["Assessment_url"]
 
         score = 0
+        reasons = []
 
         # keyword overlap
         for word in keywords:
             if word in past_query:
                 score += 2
+                if word not in reasons:
+                    reasons.append(word)
 
         # role-specific boost
         for role in ["java", "python", "sql", "analyst", "sales", "manager"]:
             if role in query_text and role in past_query:
                 score += 3
+                reasons.append(f"{role} role relevance")
 
         # duration awareness
         if "40" in query_text and "40" in past_query:
             score += 2
-        if "60" in query_text or "1 hour" in query_text:
-            if "60" in past_query or "hour" in past_query:
-                score += 2
+            reasons.append("matches 40-minute assessment duration")
 
         if score > 0:
-            scores[url] = max(scores.get(url, 0), score)
+            reason_text = "Matched " + ", ".join(reasons[:3]) if reasons else "Relevant to similar SHL hiring queries"
 
-    ranked = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    return [url for url, _ in ranked[:top_k]]
+            results.append({
+                "url": url,
+                "score": score,
+                "reason": reason_text
+            })
+
+    # sort by score
+    ranked = sorted(results, key=lambda x: x["score"], reverse=True)
+
+    return ranked[:top_k]
+
 

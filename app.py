@@ -1,3 +1,4 @@
+from urllib import response
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from recommender.recommender import recommend_assessments
@@ -17,21 +18,25 @@ def recommend():
     if not data or "query" not in data:
         return jsonify({"error": "query missing"}), 400
 
-    urls = recommend_assessments(data["query"])
+    recommendations = recommend_assessments(data["query"])
 
-    results = []
-    for url in urls:
-        results.append({
-            "name": "SHL Assessment",
-            "url": url,
-            "description": "Recommended based on similar SHL hiring queries",
-            "duration": 40,
-            "remote_support": "Yes",
-            "adaptive_support": "No",
-            "test_type": ["K", "P"]
-        })
+    response = {
+        "recommended_assessments": [
+            {
+                "name": "SHL Assessment",
+                "url": item["url"],
+                "description": item["reason"],
+                "duration": 40,
+                "remote_support": "Yes",
+                "adaptive_support": "No",
+                "test_type": ["K", "P"]
+            }
+            for item in recommendations
+        ]
+    }
 
-    return jsonify({"recommended_assessments": results}), 200
+    return jsonify(response)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
