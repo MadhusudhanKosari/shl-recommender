@@ -40,9 +40,7 @@ def extract_keywords(query):
     return set(words)
 
 def recommend_assessments(query, top_k=5):
-    keywords = extract_keywords(query)
     query_text = query.lower()
-
     results = []
 
     for _, row in df.iterrows():
@@ -52,45 +50,62 @@ def recommend_assessments(query, top_k=5):
         score = 0
         reasons = []
 
-        # keyword overlap
-        # skill-based reasoning
+        # Skill-based reasoning
         for key, label in SKILL_KEYWORDS.items():
             if key in query_text and key in past_query:
                 score += 3
-                reasons.append(label)
+                if label not in reasons:
+                    reasons.append(label)
 
-        # experience-based reasoning
+        # Experience-based reasoning
         for key, label in EXPERIENCE_KEYWORDS.items():
             if key in query_text and key in past_query:
                 score += 2
-                reasons.append(label)
+                if label not in reasons:
+                    reasons.append(label)
 
-        # role-specific boost
-        for role in ["java", "python", "sql", "analyst", "sales", "manager"]:
-            if role in query_text and role in past_query:
-                score += 3
-                reasons.append(f"{role} role relevance")
-
-        # duration awareness
+        # Duration awareness
         if "40" in query_text and "40" in past_query:
             score += 2
-            reasons.append("matches 40-minute assessment duration")
+            reasons.append("40-minute assessment duration")
 
+        # Skip completely irrelevant rows
+        if score == 0:
+            continue
+
+        # Build human-friendly reason
         if reasons:
             reason_text = "Relevant for " + " and ".join(reasons[:2])
         else:
-            reason_text = "Frequently recommended for similar SHL hiring scenarios"
+            reason_text = "Relevant for " + summarize_query_intent(query)
 
+        results.append({
+            "url": url,
+            "score": score,
+            "reason": reason_text
+        })
 
-            results.append({
-                "url": url,
-                "score": score,
-                "reason": reason_text
-            })
-
-    # sort by score
+    # Sort by relevance
     ranked = sorted(results, key=lambda x: x["score"], reverse=True)
-
     return ranked[:top_k]
+
+def summarize_query_intent(query):
+    query = query.lower()
+
+    if "java" in query:
+        return "Java developer hiring requirements"
+    if "product" in query:
+        return "product-oriented role requirements"
+    if "analyst" in query:
+        return "analyst role requirements"
+    if "sales" in query:
+        return "sales role hiring needs"
+    if "manager" in query:
+        return "managerial role requirements"
+
+    if "experience" in query or "year" in query:
+        return "experience-based hiring requirements"
+
+    return "the given hiring requirements"
 
 
